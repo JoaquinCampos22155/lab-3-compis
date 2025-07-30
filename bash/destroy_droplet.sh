@@ -1,15 +1,27 @@
-#!/bin/bash
+# destroy_droplet.sh
+#!/usr/bin/env bash
+set -eo pipefail
 
-# You MUST destroy all droplets.
 
-# Set your DigitalOcean API token here
-API_TOKEN="DO_API_TOKEN"
+if [ -z "${API_TOKEN:-}" ]; then
+  echo "❌ Error: API_TOKEN no definido."
+  exit 1
+fi
 
-# Read the droplet ID from the file
-DROPLET_ID=$(cat droplet_id.txt)
 
-# Destroy the droplet using the DigitalOcean API
-curl -k -X DELETE "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" \
-    -H "Authorization: Bearer $API_TOKEN"
+if [ ! -f droplet_id.txt ]; then
+  echo "❌ Error: droplet_id.txt no encontrado. ¿Creaste primero el droplet?"
+  exit 1
+fi
 
-echo "Droplet with ID $DROPLET_ID has been destroyed"
+DROPLET_ID=$(<droplet_id.txt)
+echo "🗑️  Destruyendo droplet ID=${DROPLET_ID}..."
+
+
+curl -sSL -X DELETE "https://api.digitalocean.com/v2/droplets/${DROPLET_ID}" \
+  -H "Authorization: Bearer ${API_TOKEN}"
+
+
+rm -f droplet_id.txt droplet_ip.txt
+
+echo "✅ Droplet ${DROPLET_ID} destruido."
